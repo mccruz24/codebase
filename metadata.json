@@ -1,0 +1,7 @@
+{
+  "name": "Aesthetic Injection Logbook",
+  "description": "A privacy-first, premium mobile logbook for tracking injectable compounds and subjective aesthetic metrics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
