@@ -15,14 +15,14 @@ export const DisclaimerModal: React.FC<DisclaimerModalProps> = ({ onAccept }) =>
           </div>
           <h2 className="text-xl font-semibold text-stone-900">Not Medical Advice</h2>
           <div className="text-sm text-stone-600 space-y-3 leading-relaxed">
+            <p>This application is a passive logbook for personal documentation only.</p>
             <p>
-              This application is a passive logbook for personal documentation only.
+              It does <strong>not</strong> provide medical diagnoses, treatment recommendations, or
+              dosage advice.
             </p>
             <p>
-              It does <strong>not</strong> provide medical diagnoses, treatment recommendations, or dosage advice.
-            </p>
-            <p>
-              By continuing, you acknowledge that you are using this tool solely for record-keeping purposes.
+              By continuing, you acknowledge that you are using this tool solely for record-keeping
+              purposes.
             </p>
           </div>
           <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Compounds } from './pages/Compounds';
@@ -31,30 +31,30 @@ const AppContent: React.FC = () => {
 
     // Theme Logic
     const applyTheme = () => {
-       const s = getSettings();
-       const root = window.document.documentElement;
-       root.classList.remove('light', 'dark');
-       
-       if (s.theme === 'system') {
-          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-             root.classList.add('dark');
-          } else {
-             root.classList.add('light');
-          }
-       } else {
-          root.classList.add(s.theme);
-       }
+      const s = getSettings();
+      const root = window.document.documentElement;
+      root.classList.remove('light', 'dark');
+
+      if (s.theme === 'system') {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.add('light');
+        }
+      } else {
+        root.classList.add(s.theme);
+      }
     };
-    
+
     // Apply immediately
     applyTheme();
 
     // Listen for custom event from Settings page
     const handleSettingsChange = () => applyTheme();
     window.addEventListener('app-settings-changed', handleSettingsChange);
-    
+
     return () => {
-        window.removeEventListener('app-settings-changed', handleSettingsChange);
+      window.removeEventListener('app-settings-changed', handleSettingsChange);
     };
   }, []);
 

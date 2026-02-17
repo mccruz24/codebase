@@ -1,11 +1,11 @@
-import { Compound, InjectionLog, AestheticCheckIn, COLORS, AppSettings } from '../types';
+import { Compound, InjectionLog, AestheticCheckIn, AppSettings } from '../types';
 
 const STORAGE_KEYS = {
   COMPOUNDS: 'al_compounds',
   INJECTIONS: 'al_injections',
   CHECKINS: 'al_checkins',
   SETTINGS: 'al_settings',
-  INIT: 'al_initialized_v5' // Bumped version for micro needling
+  INIT: 'al_initialized_v5', // Bumped version for micro needling
 };
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -23,149 +23,149 @@ export const seedMockData = () => {
   const dysportId = generateId() + '4';
   const rejuranId = generateId() + '5';
   const mnId = generateId() + '6';
-  
+
   const compounds: Compound[] = [
     {
       id: testCId,
-      name: "Testosterone Cypionate",
+      name: 'Testosterone Cypionate',
       category: 'peptide',
-      doseUnit: "mg",
+      doseUnit: 'mg',
       doseAmount: 50,
-      frequencyType: "specific_days",
-      frequencySpecificDays: ["Mon", "Thu"],
+      frequencyType: 'specific_days',
+      frequencySpecificDays: ['Mon', 'Thu'],
       startDate: new Date(now.getTime() - 60 * oneDay).toISOString(),
       isArchived: false,
       color: 'bg-indigo-500',
-      peptideAmount: 200, 
+      peptideAmount: 200,
       dilutionAmount: 1,
-      concentration: 200
+      concentration: 200,
     },
     {
       id: bpcId,
-      name: "BPC-157",
+      name: 'BPC-157',
       category: 'peptide',
-      doseUnit: "mcg",
+      doseUnit: 'mcg',
       doseAmount: 500,
-      frequencyType: "interval",
+      frequencyType: 'interval',
       frequencyDays: 1, // Every Day
       startDate: new Date(now.getTime() - 10 * oneDay).toISOString(),
       isArchived: false,
       color: 'bg-teal-500',
-      peptideAmount: 5, 
-      dilutionAmount: 2, 
-      concentration: 2.5 
+      peptideAmount: 5,
+      dilutionAmount: 2,
+      concentration: 2.5,
     },
     {
       id: dysportId,
-      name: "Dysport",
+      name: 'Dysport',
       category: 'relaxant',
-      targetArea: ["Masseter"],
-      doseUnit: "IU",
+      targetArea: ['Masseter'],
+      doseUnit: 'IU',
       doseAmount: 60,
-      frequencyType: "interval",
+      frequencyType: 'interval',
       frequencyDays: 120, // Every 4 months
       startDate: new Date(now.getTime() - 100 * oneDay).toISOString(),
       isArchived: false,
       color: 'bg-purple-500',
-      peptideAmount: 300, 
-      dilutionAmount: 1.5, 
-      concentration: 200
+      peptideAmount: 300,
+      dilutionAmount: 1.5,
+      concentration: 200,
     },
     {
       id: rejuranId,
-      name: "Rejuran Healer",
+      name: 'Rejuran Healer',
       category: 'booster',
       subCategory: 'Polynucleotide',
-      targetArea: ["Full Face"],
-      doseUnit: "ml",
+      targetArea: ['Full Face'],
+      doseUnit: 'ml',
       doseAmount: 2,
-      frequencyType: "interval",
+      frequencyType: 'interval',
       frequencyDays: 30, // Every month
       startDate: new Date(now.getTime() - 45 * oneDay).toISOString(),
       isArchived: false,
-      color: 'bg-sky-500'
+      color: 'bg-sky-500',
     },
     {
       id: mnId,
-      name: "Dr. Pen Protocol",
+      name: 'Dr. Pen Protocol',
       category: 'microneedling',
-      targetArea: ["Face", "Neck"],
-      doseUnit: "mm",
+      targetArea: ['Face', 'Neck'],
+      doseUnit: 'mm',
       doseAmount: 1.5,
-      frequencyType: "interval",
+      frequencyType: 'interval',
       frequencyDays: 28, // Every 4 weeks
       startDate: new Date(now.getTime() - 60 * oneDay).toISOString(),
       isArchived: false,
-      color: 'bg-rose-500'
-    }
+      color: 'bg-rose-500',
+    },
   ];
 
   // 2. Create Injections (Last 30 days)
   const injections: InjectionLog[] = [];
-  
+
   // Backfill Test C
   for (let i = 0; i < 8; i++) {
-    const date = new Date(now.getTime() - (i * 3.5 * oneDay));
+    const date = new Date(now.getTime() - i * 3.5 * oneDay);
     injections.push({
       id: generateId() + i,
       compoundId: testCId,
       timestamp: date.toISOString(),
       dose: 50,
-      site: i % 2 === 0 ? "Left Ventroglute" : "Right Ventroglute"
+      site: i % 2 === 0 ? 'Left Ventroglute' : 'Right Ventroglute',
     });
   }
 
   // Backfill BPC-157 (Every day for last 10 days)
   for (let i = 0; i < 10; i++) {
-    const date = new Date(now.getTime() - (i * oneDay));
-    if (i === 0) continue; 
-    
+    const date = new Date(now.getTime() - i * oneDay);
+    if (i === 0) continue;
+
     injections.push({
       id: generateId() + i + '_bpc',
       compoundId: bpcId,
       timestamp: date.toISOString(),
       dose: 500,
-      site: "Stomach"
+      site: 'Stomach',
     });
   }
-  
+
   // Backfill Dysport
   injections.push({
-      id: generateId() + '_botox',
-      compoundId: dysportId,
-      timestamp: new Date(now.getTime() - 95 * oneDay).toISOString(),
-      dose: 60,
-      site: "Masseter"
+    id: generateId() + '_botox',
+    compoundId: dysportId,
+    timestamp: new Date(now.getTime() - 95 * oneDay).toISOString(),
+    dose: 60,
+    site: 'Masseter',
   });
 
   // Backfill MN
   injections.push({
-      id: generateId() + '_mn1',
-      compoundId: mnId,
-      timestamp: new Date(now.getTime() - 30 * oneDay).toISOString(),
-      dose: 1.5,
-      site: "Face, Neck"
+    id: generateId() + '_mn1',
+    compoundId: mnId,
+    timestamp: new Date(now.getTime() - 30 * oneDay).toISOString(),
+    dose: 1.5,
+    site: 'Face, Neck',
   });
 
   // 3. Create Check-ins (4 weeks)
   const checkIns: AestheticCheckIn[] = [];
   for (let i = 0; i < 5; i++) {
-    const date = new Date(now.getTime() - (i * 7 * oneDay));
+    const date = new Date(now.getTime() - i * 7 * oneDay);
     checkIns.push({
       id: generateId() + i + '_checkin',
       date: date.toISOString(),
-      weight: 185 - (i * 0.5), 
+      weight: 185 - i * 0.5,
       metrics: {
-        muscleFullness: 6 + (Math.random() * 2),
-        skinClarity: 5 + (Math.random() * 3),
-        skinTexture: 5 + (Math.random() * 2),
-        facialFullness: 6 - (i * 0.2), 
-        inflammation: 4 - (i * 0.3),
-        jawlineDefinition: 5 + (i * 0.5),
-        energy: 7 + (Math.random() * 2),
-        sleepQuality: 6 + (Math.random() * 2),
-        libido: 8
-      }
+        muscleFullness: 6 + Math.random() * 2,
+        skinClarity: 5 + Math.random() * 3,
+        skinTexture: 5 + Math.random() * 2,
+        facialFullness: 6 - i * 0.2,
+        inflammation: 4 - i * 0.3,
+        jawlineDefinition: 5 + i * 0.5,
+        energy: 7 + Math.random() * 2,
+        sleepQuality: 6 + Math.random() * 2,
+        libido: 8,
+      },
     });
   }
 
@@ -179,16 +179,20 @@ export const seedMockData = () => {
 export const getCompounds = (): Compound[] => {
   const data = localStorage.getItem(STORAGE_KEYS.COMPOUNDS);
   // Migration support
-  return data ? JSON.parse(data).map((c: any) => ({ 
-    ...c, 
-    category: (['peptide','relaxant','booster','microneedling'].includes(c.category)) ? c.category : 'peptide' 
-  })) : [];
+  return data
+    ? JSON.parse(data).map((c: Partial<Compound> & Record<string, unknown>) => ({
+        ...c,
+        category: ['peptide', 'relaxant', 'booster', 'microneedling'].includes(c.category)
+          ? c.category
+          : 'peptide',
+      }))
+    : [];
 };
 
 export const saveCompound = (compound: Omit<Compound, 'id'> & { id?: string }): void => {
   const compounds = getCompounds();
   if (compound.id) {
-    const index = compounds.findIndex(c => c.id === compound.id);
+    const index = compounds.findIndex((c) => c.id === compound.id);
     if (index !== -1) compounds[index] = compound as Compound;
   } else {
     compounds.push({ ...compound, id: generateId(), isArchived: false } as Compound);
@@ -197,7 +201,7 @@ export const saveCompound = (compound: Omit<Compound, 'id'> & { id?: string }): 
 };
 
 export const deleteCompound = (id: string): void => {
-  const compounds = getCompounds().filter(c => c.id !== id);
+  const compounds = getCompounds().filter((c) => c.id !== id);
   localStorage.setItem(STORAGE_KEYS.COMPOUNDS, JSON.stringify(compounds));
 };
 
@@ -216,7 +220,12 @@ export const saveInjection = (log: Omit<InjectionLog, 'id'>): void => {
 // Check-ins
 export const getCheckIns = (): AestheticCheckIn[] => {
   const data = localStorage.getItem(STORAGE_KEYS.CHECKINS);
-  return data ? JSON.parse(data).sort((a: AestheticCheckIn, b: AestheticCheckIn) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+  return data
+    ? JSON.parse(data).sort(
+        (a: AestheticCheckIn, b: AestheticCheckIn) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+    : [];
 };
 
 export const saveCheckIn = (checkIn: Omit<AestheticCheckIn, 'id'>): void => {
@@ -228,11 +237,13 @@ export const saveCheckIn = (checkIn: Omit<AestheticCheckIn, 'id'>): void => {
 // Settings
 export const getSettings = (): AppSettings => {
   const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-  return data ? JSON.parse(data) : {
-    units: 'imperial',
-    theme: 'system',
-    notifications: { push: true, reminders: true }
-  };
+  return data
+    ? JSON.parse(data)
+    : {
+        units: 'imperial',
+        theme: 'system',
+        notifications: { push: true, reminders: true },
+      };
 };
 
 export const saveSettings = (settings: AppSettings): void => {

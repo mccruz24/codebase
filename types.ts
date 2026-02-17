@@ -1,27 +1,26 @@
-
 export interface Compound {
   id: string;
   name: string;
-  category: 'peptide' | 'relaxant' | 'booster' | 'microneedling'; 
-  subCategory?: string; 
-  targetArea?: string[]; 
-  
+  category: 'peptide' | 'relaxant' | 'booster' | 'microneedling';
+  subCategory?: string;
+  targetArea?: string[];
+
   doseUnit: string; // mg, IU, ml, mm
   doseAmount?: number; // Default amount
-  
+
   // Frequency
   frequencyType?: 'interval' | 'specific_days';
-  frequencyDays?: number; 
-  frequencySpecificDays?: string[]; 
+  frequencyDays?: number;
+  frequencySpecificDays?: string[];
 
   startDate: string; // ISO date string
   isArchived: boolean;
   color: string;
 
   // Vial Info
-  peptideAmount?: number; 
-  dilutionAmount?: number; 
-  concentration?: number; 
+  peptideAmount?: number;
+  dilutionAmount?: number;
+  concentration?: number;
 }
 
 export interface InjectionLog {
@@ -31,7 +30,7 @@ export interface InjectionLog {
   dose: number; // For MN, this can be 0 or repurposed, but we use specific fields below
   notes?: string;
   site?: string;
-  
+
   // New Fields
   photo?: string; // Base64 string of the image
   needleDepth?: number; // Specific for MN
@@ -59,13 +58,13 @@ export interface AestheticCheckIn {
 export interface ResearchEntry {
   id: string;
   name: string;
-  classification: string; 
+  classification: string;
   overview: string;
-  researchContext: string[]; 
+  researchContext: string[];
   mechanism: string;
   limitations: string;
   regulatoryStatus: string;
-  references: string[]; 
+  references: string[];
   category: 'Reparative' | 'Metabolic' | 'Cosmetic' | 'Cognitive' | 'Other';
 }
 
@@ -79,28 +78,28 @@ export interface AppSettings {
 }
 
 export const METRIC_LABELS: Record<string, string> = {
-  muscleFullness: "Muscle Fullness",
-  skinClarity: "Skin Clarity",
-  skinTexture: "Skin Texture",
-  facialFullness: "Facial Fullness",
-  inflammation: "Inflammation (Low to High)",
-  jawlineDefinition: "Jawline Definition",
-  energy: "Energy",
-  sleepQuality: "Sleep Quality",
-  libido: "Libido"
+  muscleFullness: 'Muscle Fullness',
+  skinClarity: 'Skin Clarity',
+  skinTexture: 'Skin Texture',
+  facialFullness: 'Facial Fullness',
+  inflammation: 'Inflammation (Low to High)',
+  jawlineDefinition: 'Jawline Definition',
+  energy: 'Energy',
+  sleepQuality: 'Sleep Quality',
+  libido: 'Libido',
 };
 
 export const COLORS = [
-  'bg-red-500', 
-  'bg-rose-500', 
-  'bg-pink-500', 
-  'bg-fuchsia-500', 
-  'bg-purple-500', 
-  'bg-indigo-500', 
-  'bg-blue-500', 
-  'bg-sky-500', 
-  'bg-teal-500', 
-  'bg-emerald-500'
+  'bg-red-500',
+  'bg-rose-500',
+  'bg-pink-500',
+  'bg-fuchsia-500',
+  'bg-purple-500',
+  'bg-indigo-500',
+  'bg-blue-500',
+  'bg-sky-500',
+  'bg-teal-500',
+  'bg-emerald-500',
 ];
 
 export const TEXT_COLORS: Record<string, string> = {
