@@ -1,0 +1,51 @@
+name: Send Dosebase Reminders
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Optional YYYY-MM-DD (UTC). Leave blank for today."
+        required: false
+        type: string
+  schedule:
+    # Runs hourly (UTC). Server-side de-dupe prevents sending more than once/day per device.
+    - cron: "0 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: send-due-today-reminders
+  cancel-in-progress: true
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call Supabase Edge Function
+        env:
+          FUNCTION_URL: ${{ secrets.SUPABASE_REMINDERS_FUNCTION_URL }}
+          CRON_SECRET: ${{ secrets.SUPABASE_CRON_SECRET }}
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${FUNCTION_URL}" ]; then
+            echo "Missing secret SUPABASE_REMINDERS_FUNCTION_URL"
+            exit 1
+          fi
+
+          DATE_PARAM=""
+          if [ -n "${INPUT_DATE:-}" ]; then
+            DATE_PARAM="?date=${INPUT_DATE}"
+          fi
+
+          echo "Calling: ${FUNCTION_URL}${DATE_PARAM}"
+
+          if [ -n "${CRON_SECRET:-}" ]; then
+            curl --fail-with-body -sS -X POST "${FUNCTION_URL}${DATE_PARAM}" \
+              -H "x-cron-secret: ${CRON_SECRET}"
+          else
+            curl --fail-with-body -sS -X POST "${FUNCTION_URL}${DATE_PARAM}"
+          fi
