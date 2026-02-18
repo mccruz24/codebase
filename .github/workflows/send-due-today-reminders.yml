@@ -9,7 +9,7 @@ on:
         type: string
   schedule:
     # Runs hourly (UTC). Server-side de-dupe prevents sending more than once/day per device.
-    - cron: "0 * * * *"
+    - cron: "0 9 * * *"
 
 permissions:
   contents: read
