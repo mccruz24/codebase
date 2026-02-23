@@ -21,7 +21,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {!isForm && (
-        <nav className="fixed bottom-6 left-6 right-6 z-50 safe-area-bottom">
+        <nav className="fixed bottom-6 left-0 right-0 z-50 safe-area-bottom px-6">
           <div className="max-w-[340px] mx-auto bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] border border-white/50 dark:border-stone-800 h-16 px-6 flex justify-between items-center transition-colors">
             <NavLink
               to="/"
