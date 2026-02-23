@@ -1,0 +1,65 @@
+-- ============================================================
+-- DOSEBASE: Extend due-protocols helper for reminders
+-- ============================================================
+-- Adds subscription_id and last_sent_on for server-side de-dupe.
+
+CREATE OR REPLACE FUNCTION public.get_users_with_due_protocols(p_date date DEFAULT current_date)
+RETURNS TABLE (
+  user_id     uuid,
+  subscription_id uuid,
+  endpoint    text,
+  p256dh      text,
+  auth_key    text,
+  pending_count bigint,
+  last_sent_on date
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  WITH active_compounds AS (
+    SELECT c.id AS compound_id, c.user_id, c.frequency_type, c.frequency_days,
+           c.frequency_specific_days, c.start_date
+    FROM compounds c
+    WHERE c.is_archived = false
+  ),
+  due_compounds AS (
+    SELECT ac.compound_id, ac.user_id
+    FROM active_compounds ac
+    WHERE
+      CASE
+        WHEN ac.frequency_type = 'specific_days' THEN
+          trim(to_char(p_date, 'Dy')) = ANY(ac.frequency_specific_days)
+        WHEN ac.frequency_type = 'interval' AND ac.frequency_days IS NOT NULL THEN
+          (p_date - ac.start_date) % ac.frequency_days = 0
+        ELSE false
+      END
+  ),
+  already_logged AS (
+    SELECT il.compound_id, il.user_id
+    FROM injection_logs il
+    WHERE il.timestamp >= p_date::timestamptz
+      AND il.timestamp < (p_date + interval '1 day')::timestamptz
+  ),
+  pending AS (
+    SELECT dc.user_id, count(*) AS pending_count
+    FROM due_compounds dc
+    LEFT JOIN already_logged al
+      ON al.compound_id = dc.compound_id AND al.user_id = dc.user_id
+    WHERE al.compound_id IS NULL
+    GROUP BY dc.user_id
+    HAVING count(*) > 0
+  )
+  SELECT
+    p.user_id,
+    ps.id AS subscription_id,
+    ps.endpoint,
+    ps.p256dh,
+    ps.auth_key,
+    p.pending_count,
+    ps.last_sent_on
+  FROM pending p
+  JOIN profiles pr ON pr.id = p.user_id AND pr.notify_push = true AND pr.notify_reminders = true
+  JOIN push_subscriptions ps ON ps.user_id = p.user_id;
+$$;

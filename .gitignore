@@ -9,8 +9,22 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
 *.local
+
+# React Native / Expo
+apps/native/.expo/
+apps/native/node_modules/
+apps/native/dist/
+apps/native/.DS_Store
+apps/native/npm-debug.log*
+apps/native/yarn-debug.log*
+apps/native/yarn-error.log*
+apps/native/pnpm-debug.log*
+apps/native/ios/
+apps/native/android/
+
+# Shared package build outputs
+packages/shared/dist/
 
 # Editor directories and files
 .vscode/*

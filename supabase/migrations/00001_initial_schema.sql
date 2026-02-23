@@ -2,6 +2,9 @@
 -- DOSEBASE: Initial Schema Migration
 -- ============================================================
 
+-- Required for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ============================================================
 -- 1. CUSTOM ENUM TYPES
 -- ============================================================
