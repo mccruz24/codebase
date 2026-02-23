@@ -1,7 +1,7 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Redirect, Tabs } from 'expo-router';
-import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -19,7 +19,6 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const { width: windowWidth } = useWindowDimensions();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const palette = getUiPalette(isDark);
@@ -40,8 +39,6 @@ export default function TabLayout() {
   // Active: stone-900 (light) / white (dark); Inactive: stone-300 (light) / stone-600 (dark)
   const activeColor = isDark ? '#FAFAF9' : '#1C1917';
   const inactiveColor = isDark ? '#57534E' : '#D6D3D1';
-  const tabBarWidth = Math.min(windowWidth - 48, 420);
-
   return (
     <Tabs
       screenOptions={{
@@ -52,9 +49,8 @@ export default function TabLayout() {
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
-          width: tabBarWidth,
-          left: (windowWidth - tabBarWidth) / 2,
-          right: (windowWidth - tabBarWidth) / 2,
+          left: 24,
+          right: 24,
           bottom: 24,
           height: 64,
           borderTopWidth: 1,
