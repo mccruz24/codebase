@@ -1,0 +1,3 @@
+-- Seed data for local development.
+-- This file is referenced by `supabase/config.toml` under `[db.seed].sql_paths`.
+-- Add INSERTs here if you want deterministic local test data.
