@@ -67,6 +67,7 @@ function RootLayoutNavInner() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="compound-form" options={{ headerShown: false }} />
+        <Stack.Screen name="edit-protocol" options={{ headerShown: false }} />
         <Stack.Screen name="calendar" options={{ headerShown: false }} />
         <Stack.Screen name="check-in" options={{ headerShown: false }} />
         <Stack.Screen name="faq" options={{ headerShown: false }} />

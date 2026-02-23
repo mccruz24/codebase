@@ -245,7 +245,7 @@ export default function ProtocolsScreen() {
                     {compoundsInCategory.map((compound) => (
                       <Pressable
                         key={compound.id}
-                        onPress={() => router.push({ pathname: '/compound-form', params: { id: compound.id } })}
+                        onPress={() => router.push({ pathname: '/edit-protocol', params: { id: compound.id } })}
                         style={[styles.protocolCard, {
                           backgroundColor: palette.card,
                           borderColor: isDark ? '#292524' : '#FAFAF9',
@@ -296,7 +296,7 @@ export default function ProtocolsScreen() {
                   {archivedCompounds.map((compound) => (
                     <Pressable
                       key={compound.id}
-                      onPress={() => router.push({ pathname: '/compound-form', params: { id: compound.id } })}
+                      onPress={() => router.push({ pathname: '/edit-protocol', params: { id: compound.id } })}
                       style={[styles.protocolCard, {
                         backgroundColor: isDark ? '#1E1D1B' : '#F5F4F2',
                         borderColor: isDark ? '#292524' : '#E7E5E4',

@@ -3,11 +3,13 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
+  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  UIManager,
   View,
 } from 'react-native';
 import { Screen } from '@/components/Screen';
@@ -73,6 +75,46 @@ function formatDelta(delta: number, metric: MetricKey, units: 'imperial' | 'metr
   return `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`;
 }
 
+function buildSmoothCurve(
+  nodes: Array<{ x: number; y: number; label: string }>,
+  samplesPerSegment = 6
+) {
+  if (nodes.length <= 2) return nodes;
+
+  const curve: Array<{ x: number; y: number; label: string }> = [nodes[0]];
+
+  for (let idx = 0; idx < nodes.length - 1; idx += 1) {
+    const p0 = nodes[Math.max(0, idx - 1)];
+    const p1 = nodes[idx];
+    const p2 = nodes[idx + 1];
+    const p3 = nodes[Math.min(nodes.length - 1, idx + 2)];
+
+    for (let sample = 1; sample <= samplesPerSegment; sample += 1) {
+      const t = sample / samplesPerSegment;
+      const t2 = t * t;
+      const t3 = t2 * t;
+
+      const x =
+        0.5 *
+        ((2 * p1.x) +
+          (-p0.x + p2.x) * t +
+          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+      const y =
+        0.5 *
+        ((2 * p1.y) +
+          (-p0.y + p2.y) * t +
+          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+      curve.push({ x, y, label: p2.label });
+    }
+  }
+
+  return curve;
+}
+
 export default function TrendsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -85,6 +127,12 @@ export default function TrendsScreen() {
   const [checkIns, setCheckIns] = useState<AestheticCheckIn[]>([]);
   const [metric, setMetric] = useState<MetricKey>('weight');
   const [chartWidth, setChartWidth] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -128,6 +176,7 @@ export default function TrendsScreen() {
     if (chartWidth <= 0 || points.length === 0) {
       return {
         nodes: [] as Array<{ x: number; y: number; label: string }>,
+        curveNodes: [] as Array<{ x: number; y: number; label: string }>,
         segments: [] as Array<{ left: number; top: number; width: number; angle: number }>,
       };
     }
@@ -145,21 +194,24 @@ export default function TrendsScreen() {
       return { x, y, label: point.label };
     });
 
-    const segments = nodes.slice(1).map((node, idx) => {
-      const prev = nodes[idx];
+    const curveNodes = buildSmoothCurve(nodes);
+
+    const segments = curveNodes.slice(1).map((node, idx) => {
+      const prev = curveNodes[idx];
       const dx = node.x - prev.x;
       const dy = node.y - prev.y;
-      const width = Math.hypot(dx, dy);
+      const overlap = 2.5;
+      const width = Math.hypot(dx, dy) + overlap;
       const angle = Math.atan2(dy, dx);
       return {
         left: prev.x + dx / 2 - width / 2,
-        top: prev.y + dy / 2 - 1.5,
+        top: prev.y + dy / 2 - 2,
         width,
         angle,
       };
     });
 
-    return { nodes, segments };
+    return { nodes, curveNodes, segments };
   }, [chartWidth, points, min, range]);
 
   const currentMetricDef = METRICS.find((m) => m.key === metric);
@@ -228,7 +280,16 @@ export default function TrendsScreen() {
                 return (
                   <Pressable
                     key={item.key}
-                    onPress={() => setMetric(item.key)}
+                    onPress={() => {
+                      if (metric === item.key) return;
+                      LayoutAnimation.configureNext({
+                        duration: 280,
+                        update: {
+                          type: LayoutAnimation.Types.easeInEaseOut,
+                        },
+                      });
+                      setMetric(item.key);
+                    }}
                     style={[
                       styles.metricChip,
                       selected
@@ -337,19 +398,18 @@ export default function TrendsScreen() {
 
                   {chartGeometry.nodes.map((node, idx) => {
                     const isLast = idx === chartGeometry.nodes.length - 1;
+                    const lineColor = isDark ? '#E7E5E4' : '#1C1917';
                     return (
                       <View
                         key={`node-${node.label}-${idx}`}
                         style={[
                           styles.chartPoint,
                           {
-                            left: node.x - 4,
-                            top: node.y - 4,
-                            borderColor: isDark ? '#1C1917' : '#FFFFFF',
-                            backgroundColor: isLast
-                              ? isDark ? '#1C1917' : '#FFFFFF'
-                              : isDark ? '#E7E5E4' : '#1C1917',
+                            left: node.x - (isLast ? 5 : 4),
+                            top: node.y - (isLast ? 5 : 4),
+                            backgroundColor: lineColor,
                           },
+                          isLast ? styles.chartPointActive : null,
                         ]}
                       />
                     );
@@ -496,15 +556,19 @@ const styles = StyleSheet.create({
   },
   chartLineSegment: {
     position: 'absolute',
-    height: 3,
-    borderRadius: 2,
+    height: 4,
+    borderRadius: 999,
   },
   chartPoint: {
     position: 'absolute',
     width: 8,
     height: 8,
     borderRadius: 4,
-    borderWidth: 2,
+  },
+  chartPointActive: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   chartLabelsRow: {
     marginTop: 8,

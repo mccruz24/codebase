@@ -1,6 +1,6 @@
 import React from 'react';
 import ProtocolFormScreen from '@/components/ProtocolFormScreen';
 
-export default function AddProtocolScreen() {
-  return <ProtocolFormScreen mode="add" />;
+export default function EditProtocolScreen() {
+  return <ProtocolFormScreen mode="edit" />;
 }
