@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import {
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -12,10 +11,13 @@ import {
   View,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
+import { AnimatedCard } from '@/components/motion/AnimatedCard';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { haptics } from '@/services/haptics';
 import { UI_LAYOUT, getUiPalette } from '@/theme/ui';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import {
@@ -50,9 +52,11 @@ export default function SettingsScreen() {
   // ── Handlers ────────────────────────────────────────────────────
 
   const onSignOut = async () => {
+    haptics.selection();
     setLoading(true);
     try {
       await signOut();
+      haptics.success();
       router.replace('/(auth)/sign-in');
     } finally {
       setLoading(false);
@@ -61,6 +65,7 @@ export default function SettingsScreen() {
 
   const setTheme = async (theme: 'system' | 'light' | 'dark') => {
     if (!profile) return;
+    haptics.selection();
     setSaving(true);
     try {
       await update({ theme });
@@ -71,6 +76,7 @@ export default function SettingsScreen() {
 
   const setUnits = async (units: 'imperial' | 'metric') => {
     if (!profile) return;
+    haptics.selection();
     setSaving(true);
     try {
       await update({ units });
@@ -81,6 +87,7 @@ export default function SettingsScreen() {
 
   const toggleNotify = async (key: 'notify_push' | 'notify_reminders') => {
     if (!profile) return;
+    haptics.selection();
 
     if (key === 'notify_push') {
       const next = !profile.notify_push;
@@ -100,6 +107,7 @@ export default function SettingsScreen() {
     if (key === 'notify_reminders') {
       const next = !profile.notify_reminders;
       if (next && !isPro) {
+        haptics.error();
         Alert.alert(
           'Pro Feature',
           'Scheduled reminders are a Pro feature. Upgrade to unlock.',
@@ -108,6 +116,7 @@ export default function SettingsScreen() {
         return;
       }
       if (next && !profile.notify_push) {
+        haptics.error();
         Alert.alert(
           'Enable Push First',
           'Enable Push Notifications first to receive scheduled reminders.',
@@ -125,6 +134,7 @@ export default function SettingsScreen() {
   };
 
   const handleExport = async () => {
+    haptics.selection();
     try {
       const json = await exportUserData();
       const filename = `dosebase-export-${new Date().toISOString().split('T')[0]}.json`;
@@ -137,13 +147,16 @@ export default function SettingsScreen() {
         url: path,          // iOS: share sheet with the file
         message: Platform.OS === 'android' ? json : undefined, // Android fallback: share text
       });
+      haptics.success();
     } catch (err) {
       console.error(err);
+      haptics.error();
       Alert.alert('Export Failed', err instanceof Error ? err.message : 'Could not export data.');
     }
   };
 
   const handleImport = () => {
+    haptics.selection();
     Alert.alert(
       'Import Data',
       'Paste your JSON export below or use the share sheet to open a file with this app. This will merge data into your account.',
@@ -162,11 +175,13 @@ export default function SettingsScreen() {
                   setImporting(true);
                   try {
                     const result = await importUserData(text);
+                    haptics.success();
                     Alert.alert(
                       'Import Successful',
                       `Imported ${result.compoundsImported} protocols, ${result.injectionsImported} logs, ${result.checkInsImported} check-ins.`
                     );
                   } catch (e) {
+                    haptics.error();
                     Alert.alert('Import Failed', e instanceof Error ? e.message : 'Unknown error');
                   } finally {
                     setImporting(false);
@@ -185,6 +200,7 @@ export default function SettingsScreen() {
 
   const handleSeedDemo = async () => {
     if (!user || !isTestAccount) return;
+    haptics.selection();
     setSeeding(true);
     try {
       let result = await seedDemoData({ days: 30, force: false });
@@ -198,13 +214,16 @@ export default function SettingsScreen() {
               text: 'Wipe & Replace',
               style: 'destructive',
               onPress: async () => {
+                haptics.destructive();
                 try {
                   result = await seedDemoData({ days: 30, force: true });
+                  haptics.success();
                   Alert.alert(
                     'Done',
                     `Demo data created: ${result.compounds} protocols, ${result.injections} logs, ${result.checkins} check-ins`
                   );
                 } catch (e) {
+                  haptics.error();
                   Alert.alert('Seeding Failed', e instanceof Error ? e.message : 'Unknown error');
                 } finally {
                   setSeeding(false);
@@ -214,6 +233,7 @@ export default function SettingsScreen() {
           ]
         );
       } else {
+        haptics.success();
         Alert.alert(
           'Done',
           `Demo data created: ${result.compounds} protocols, ${result.injections} logs, ${result.checkins} check-ins`
@@ -221,6 +241,7 @@ export default function SettingsScreen() {
         setSeeding(false);
       }
     } catch (err) {
+      haptics.error();
       Alert.alert('Seeding Failed', err instanceof Error ? err.message : 'Unknown error');
       setSeeding(false);
     }
@@ -228,15 +249,19 @@ export default function SettingsScreen() {
 
   const handleResetOnboarding = async () => {
     if (!user) return;
+    haptics.selection();
     try {
       await update({ onboarding_completed: false, onboarding_version: 1 });
+      haptics.success();
       router.replace('/(onboarding)');
     } catch (err) {
+      haptics.error();
       Alert.alert('Error', err instanceof Error ? err.message : 'Reset onboarding failed');
     }
   };
 
   const handleResetAllData = () => {
+    haptics.selection();
     Alert.alert(
       'Reset All Data',
       'This will permanently delete all your protocols, logs, and check-ins. This cannot be undone.',
@@ -256,6 +281,7 @@ export default function SettingsScreen() {
                   text: 'Yes, wipe everything',
                   style: 'destructive',
                   onPress: async () => {
+                    haptics.destructive();
                     try {
                       await clearUserData();
                       await update({
@@ -264,8 +290,10 @@ export default function SettingsScreen() {
                         notify_push: true,
                         notify_reminders: true,
                       });
+                      haptics.success();
                       Alert.alert('Done', 'All data has been reset.');
                     } catch (err) {
+                      haptics.error();
                       Alert.alert('Error', err instanceof Error ? err.message : 'Reset failed');
                     }
                   },
@@ -280,6 +308,7 @@ export default function SettingsScreen() {
 
   const handleInvite = async () => {
     try {
+      haptics.selection();
       await Share.share({
         title: 'Aesthetic Logbook',
         message: 'Check out this app for tracking your wellness journey. https://dosebase.app',
@@ -309,7 +338,7 @@ export default function SettingsScreen() {
 
         {/* ── PREFERENCES ── */}
         <SectionLabel label="Preferences" color={textMuted} />
-        <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <AnimatedCard delay={40} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
 
           {/* Unit System */}
           <Text style={[styles.itemTitle, { color: textPrimary }]}>Unit System</Text>
@@ -356,11 +385,11 @@ export default function SettingsScreen() {
               onPress={() => void setTheme('system')}
             />
           </View>
-        </View>
+        </AnimatedCard>
 
         {/* ── NOTIFICATIONS ── */}
         <SectionLabel label="Notifications" color={textMuted} />
-        <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <AnimatedCard delay={80} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <ToggleRow
             icon="bell"
             iconBg="#CBE4F9"
@@ -386,11 +415,11 @@ export default function SettingsScreen() {
             textMuted={textMuted}
             isDark={isDark}
           />
-        </View>
+        </AnimatedCard>
 
         {/* ── ACCOUNT ── */}
         <SectionLabel label="Account" color={textMuted} />
-        <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <AnimatedCard delay={120} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <View style={styles.accountRow}>
             <View style={[styles.accountAvatar, { backgroundColor: '#FDF4C4' }]}>
               <FontAwesome name="user" size={16} color="#78716C" />
@@ -403,7 +432,7 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <Pressable
+          <AnimatedPressable
             onPress={onSignOut}
             disabled={loading || saving}
             style={[
@@ -416,12 +445,12 @@ export default function SettingsScreen() {
             <Text style={[styles.signOutText, { color: isDark ? '#1C1917' : '#FFFFFF' }]}>
               {loading ? 'Signing out…' : saving ? 'Saving…' : 'Sign Out'}
             </Text>
-          </Pressable>
-        </View>
+          </AnimatedPressable>
+        </AnimatedCard>
 
         {/* ── SUPPORT ── */}
         <SectionLabel label="Support" color={textMuted} />
-        <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <AnimatedCard delay={160} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <InfoRow
             icon="question-circle"
             iconBg="#FDF4C4"
@@ -430,7 +459,10 @@ export default function SettingsScreen() {
             subtitle="Frequently asked questions"
             textPrimary={textPrimary}
             textMuted={textMuted}
-            onPress={() => router.push('/faq')}
+            onPress={() => {
+              haptics.selection();
+              router.push('/faq');
+            }}
           />
 
           <View style={[styles.divider, { backgroundColor: cardBorder }]} />
@@ -443,7 +475,10 @@ export default function SettingsScreen() {
             subtitle="Educational compound reference"
             textPrimary={textPrimary}
             textMuted={textMuted}
-            onPress={() => router.push('/research')}
+            onPress={() => {
+              haptics.selection();
+              router.push('/research');
+            }}
           />
 
           {/* Medical Disclaimer */}
@@ -458,7 +493,7 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </AnimatedCard>
 
         {/* ── LEGAL & COMMUNITY ── */}
         <SectionLabel label="Legal & Community" color={textMuted} />
@@ -472,7 +507,10 @@ export default function SettingsScreen() {
               cardBorder={cardBorder}
               textPrimary={textPrimary}
               textMuted={textMuted}
-              onPress={() => router.push('/terms')}
+              onPress={() => {
+                haptics.selection();
+                router.push('/terms');
+              }}
             />
             <LegalCard
               icon="lock"
@@ -481,12 +519,15 @@ export default function SettingsScreen() {
               cardBorder={cardBorder}
               textPrimary={textPrimary}
               textMuted={textMuted}
-              onPress={() => router.push('/privacy')}
+              onPress={() => {
+                haptics.selection();
+                router.push('/privacy');
+              }}
             />
           </View>
 
           {/* Invite CTA */}
-          <Pressable
+          <AnimatedPressable
             onPress={() => void handleInvite()}
             style={[
               styles.inviteBtn,
@@ -505,12 +546,12 @@ export default function SettingsScreen() {
             <Text style={[styles.inviteBtnText, { color: isDark ? '#1C1917' : '#FFFFFF' }]}>
               Invite a Friend
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         {/* ── DATA CONTROL ── */}
         <SectionLabel label="Data Control" color={textMuted} />
-        <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder, padding: 0, overflow: 'hidden' }]}>
+        <AnimatedCard delay={200} style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder, padding: 0, overflow: 'hidden' }]}>
           <DataRow
             icon="download"
             iconBg="#CBE4F9"
@@ -570,10 +611,10 @@ export default function SettingsScreen() {
             isLast={true}
             onPress={handleResetAllData}
           />
-        </View>
+        </AnimatedCard>
 
         {/* ── ABOUT FOOTER ── */}
-        <View style={[styles.aboutCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <AnimatedCard delay={240} style={[styles.aboutCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <View style={[styles.aboutIconWrap, { backgroundColor: '#FDF4C4' }]}>
             <FontAwesome name="mobile" size={20} color="#78716C" />
           </View>
@@ -581,7 +622,7 @@ export default function SettingsScreen() {
             <Text style={[styles.aboutTitle, { color: textPrimary }]}>Aesthetic Logbook</Text>
             <Text style={[styles.aboutVersion, { color: textMuted }]}>v0.2.0 (MVP)</Text>
           </View>
-        </View>
+        </AnimatedCard>
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -614,7 +655,7 @@ function SegmentBtn({
   const activeText = isDark ? '#1C1917' : '#1C1917';
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
       style={[
         styles.segmentButton,
@@ -642,7 +683,7 @@ function SegmentBtn({
       <Text style={[styles.segmentText, active && { color: activeText }]}>
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -670,7 +711,7 @@ function ToggleRow({
   isDark: boolean;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.toggleRow}>
+    <AnimatedPressable onPress={onPress} style={styles.toggleRow}>
       <View style={[styles.toggleIconWrap, { backgroundColor: iconBg }]}>
         <FontAwesome name={icon} size={14} color={iconColor} />
       </View>
@@ -689,7 +730,7 @@ function ToggleRow({
       >
         <View style={[styles.dot, value ? styles.dotOn : styles.dotOff]} />
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -713,7 +754,7 @@ function InfoRow({
   onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.infoRow} onPress={onPress}>
+    <AnimatedPressable style={styles.infoRow} onPress={onPress}>
       <View style={[styles.toggleIconWrap, { backgroundColor: iconBg }]}>
         <FontAwesome name={icon} size={14} color={iconColor} />
       </View>
@@ -722,7 +763,7 @@ function InfoRow({
         <Text style={[styles.toggleHelper, { color: textMuted }]}>{subtitle}</Text>
       </View>
       <FontAwesome name="chevron-right" size={12} color={textMuted} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -744,7 +785,7 @@ function LegalCard({
   onPress?: () => void;
 }) {
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
       style={[
         styles.legalCard,
@@ -764,7 +805,7 @@ function LegalCard({
       </View>
       <Text style={[styles.legalLabel, { color: textPrimary }]}>{label}</Text>
       <FontAwesome name="chevron-right" size={11} color={textMuted} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -792,7 +833,7 @@ function DataRow({
   onPress?: () => void;
 }) {
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
       disabled={disabled}
       style={[
@@ -806,7 +847,7 @@ function DataRow({
       </View>
       <Text style={[styles.dataRowLabel, { color: textPrimary }]}>{label}</Text>
       <FontAwesome name="chevron-right" size={12} color={textMuted} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

@@ -5,13 +5,14 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   UIManager,
   View,
 } from 'react-native';
+import { AnimatedCard } from '@/components/motion/AnimatedCard';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -253,7 +254,7 @@ export default function TrendsScreen() {
             <Text style={[styles.title, { color: palette.textPrimary }]}>Trends</Text>
             <Text style={[styles.subtitle, { color: palette.textMuted }]}>Track your journey</Text>
           </View>
-          <Pressable
+          <AnimatedPressable
             style={[
               styles.logButton,
               Platform.OS === 'ios' && {
@@ -267,7 +268,7 @@ export default function TrendsScreen() {
           >
             <FontAwesome name="plus" size={12} color="#FFFFFF" />
             <Text style={styles.logButtonText}>Log Entry</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         {/* Metric Selector Groups */}
@@ -278,7 +279,7 @@ export default function TrendsScreen() {
               {METRICS.filter((m) => m.group === group).map((item) => {
                 const selected = metric === item.key;
                 return (
-                  <Pressable
+                  <AnimatedPressable
                     key={item.key}
                     onPress={() => {
                       if (metric === item.key) return;
@@ -308,16 +309,16 @@ export default function TrendsScreen() {
                             borderWidth: 1,
                           },
                     ]}
-                  >
-                    <Text
-                      style={[
+                    >
+                      <Text
+                        style={[
                         styles.metricChipText,
                         { color: selected ? '#FFFFFF' : palette.textSecondary },
                       ]}
                     >
                       {item.label}
                     </Text>
-                  </Pressable>
+                  </AnimatedPressable>
                 );
               })}
             </View>
@@ -325,7 +326,7 @@ export default function TrendsScreen() {
         ))}
 
         {/* Chart Card — rounded-[40px] */}
-        <View
+        <AnimatedCard
           style={[
             styles.chartCard,
             { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' },
@@ -435,7 +436,7 @@ export default function TrendsScreen() {
               <Text style={[styles.emptyChartBody, { color: palette.textMuted }]}>
                 Log more entries to see your trend.
               </Text>
-              <Pressable
+              <AnimatedPressable
                 style={[styles.logEntryCTA, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
                 onPress={() => router.push('/check-in')}
               >
@@ -443,10 +444,10 @@ export default function TrendsScreen() {
                 <Text style={[styles.logEntryCTAText, { color: palette.textSecondary }]}>
                   Log your first check-in
                 </Text>
-              </Pressable>
+              </AnimatedPressable>
             </View>
           )}
-        </View>
+        </AnimatedCard>
 
       </ScrollView>
     </Screen>
