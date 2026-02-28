@@ -5,16 +5,19 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AnimatedCard } from '@/components/motion/AnimatedCard';
+import { AnimatedFadeInView } from '@/components/motion/AnimatedFadeInView';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import { listCheckIns, listCompounds, listInjectionLogs } from '@/services/repository';
+import { haptics } from '@/services/haptics';
 import { UI_LAYOUT, getUiPalette } from '@/theme/ui';
 import {
   getLogsOnDate,
@@ -114,6 +117,7 @@ export default function CalendarScreen() {
   const [injections, setInjections] = useState<InjectionLog[]>([]);
   const [checkIns, setCheckIns] = useState<AestheticCheckIn[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [monthTransitionKey, setMonthTransitionKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -192,51 +196,62 @@ export default function CalendarScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <Pressable
-            onPress={() => router.back()}
+          <AnimatedPressable
+            onPress={() => {
+              haptics.selection();
+              router.back();
+            }}
             style={[styles.navButton, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}
           >
             <FontAwesome name="chevron-left" size={14} color={palette.textMuted} />
-          </Pressable>
+          </AnimatedPressable>
           <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>Calendar</Text>
           <View style={styles.headerSpacer} />
         </View>
 
-        <View style={[styles.monthCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
-          <Pressable
-            onPress={() =>
-              setMonthAnchor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
-            }
+        <AnimatedCard style={[styles.monthCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
+          <AnimatedPressable
+            onPress={() => {
+              haptics.selection();
+              setMonthAnchor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+              setMonthTransitionKey((prev) => prev + 1);
+            }}
             style={[styles.monthNavButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
           >
             <FontAwesome name="chevron-left" size={12} color={palette.textMuted} />
-          </Pressable>
+          </AnimatedPressable>
           <Text style={[styles.monthLabel, { color: palette.textPrimary }]}>
             {monthAnchor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </Text>
-          <Pressable
-            onPress={() =>
-              setMonthAnchor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
-            }
+          <AnimatedPressable
+            onPress={() => {
+              haptics.selection();
+              setMonthAnchor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+              setMonthTransitionKey((prev) => prev + 1);
+            }}
             style={[styles.monthNavButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
           >
             <FontAwesome name="chevron-right" size={12} color={palette.textMuted} />
-          </Pressable>
-        </View>
+          </AnimatedPressable>
+        </AnimatedCard>
 
-        <View style={styles.weekdayRow}>
+        <AnimatedFadeInView key={`month-grid-${monthTransitionKey}`} fromY={4} durationPreset="fast" springPreset="smooth">
+          <View style={styles.weekdayRow}>
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
             <View key={`${day}-${idx}`} style={styles.weekdaySlot}>
               <Text style={[styles.weekdayLabel, { color: palette.textMuted }]}>{day}</Text>
             </View>
           ))}
-        </View>
+          </View>
 
-        <View style={styles.grid}>
+          <View style={styles.grid}>
           {cells.map((cell) => (
             <View key={cell.date.toISOString()} style={styles.dayCellSlot}>
-              <Pressable
-                onPress={() => setSelectedDate(cell.date)}
+              <AnimatedPressable
+                onPress={() => {
+                  haptics.selection();
+                  setSelectedDate(cell.date);
+                }}
                 style={[
                   styles.dayCell,
                   {
@@ -266,10 +281,11 @@ export default function CalendarScreen() {
                     <View style={[styles.cellDot, { backgroundColor: '#10B981' }]} />
                   ) : null}
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             </View>
           ))}
-        </View>
+          </View>
+        </AnimatedFadeInView>
 
         <View style={styles.legendStack}>
           <View style={styles.legendRow}>
@@ -294,7 +310,13 @@ export default function CalendarScreen() {
         onRequestClose={() => setSelectedDate(null)}
       >
         <View style={styles.modalBackdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedDate(null)} />
+          <AnimatedPressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              haptics.selection();
+              setSelectedDate(null);
+            }}
+          />
           <View style={[styles.modalCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>
@@ -306,12 +328,15 @@ export default function CalendarScreen() {
                     })
                   : 'Day Details'}
               </Text>
-              <Pressable
-                onPress={() => setSelectedDate(null)}
+              <AnimatedPressable
+                onPress={() => {
+                  haptics.selection();
+                  setSelectedDate(null);
+                }}
                 style={[styles.modalCloseButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
               >
                 <FontAwesome name="close" size={14} color={palette.textMuted} />
-              </Pressable>
+              </AnimatedPressable>
             </View>
             <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
               <Text style={[styles.modalSectionLabel, { color: palette.textMuted }]}>Scheduled</Text>
@@ -320,9 +345,10 @@ export default function CalendarScreen() {
                   <Text style={[styles.emptyText, { color: palette.textMuted }]}>No scheduled protocols.</Text>
                 ) : (
                   selectedScheduled.map((compound) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={compound.id}
                       onPress={() => {
+                        haptics.selection();
                         setSelectedDate(null);
                         router.push({ pathname: '/(tabs)/log', params: { compoundId: compound.id } });
                       }}
@@ -338,7 +364,7 @@ export default function CalendarScreen() {
                         </Text>
                       </View>
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>
@@ -349,9 +375,10 @@ export default function CalendarScreen() {
                   <Text style={[styles.emptyText, { color: palette.textMuted }]}>No logs recorded.</Text>
                 ) : (
                   selectedLogs.map((log) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={log.id}
                       onPress={() => {
+                        haptics.selection();
                         setSelectedDate(null);
                         router.push({ pathname: '/(tabs)/log', params: { logId: log.id } });
                       }}
@@ -370,15 +397,16 @@ export default function CalendarScreen() {
                         </Text>
                       </View>
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>
 
               <Text style={[styles.modalSectionLabel, { color: palette.textMuted, marginTop: 18 }]}>Check-In</Text>
-              <Pressable
+              <AnimatedPressable
                 onPress={() => {
                   if (!selectedDate) return;
+                  haptics.selection();
                   const date = toDateOnly(selectedDate);
                   setSelectedDate(null);
                   router.push({ pathname: '/check-in', params: { date } });
@@ -397,7 +425,7 @@ export default function CalendarScreen() {
                   </Text>
                 </View>
                 <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-              </Pressable>
+              </AnimatedPressable>
             </ScrollView>
           </View>
         </View>

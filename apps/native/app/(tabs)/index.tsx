@@ -4,13 +4,13 @@ import { router } from 'expo-router';
 import {
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -359,19 +359,19 @@ export default function HomeScreen() {
             </Text>
           </View>
           <View style={styles.headerActions}>
-            <Pressable
+            <AnimatedPressable
               onPress={() => setSearchOpen(true)}
               style={[styles.roundAction, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}
             >
               <FontAwesome name="search" size={15} color={palette.textMuted} />
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
               onPress={() => setInboxOpen(true)}
               style={[styles.roundAction, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}
             >
               <FontAwesome name="bell-o" size={15} color={palette.textMuted} />
               {hasPending ? <View style={styles.bellDot} /> : null}
-            </Pressable>
+            </AnimatedPressable>
           </View>
         </View>
 
@@ -404,16 +404,16 @@ export default function HomeScreen() {
         <View>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: palette.textPrimary }]}>Week Days</Text>
-            <Pressable
+            <AnimatedPressable
               onPress={() => router.push('/calendar')}
               style={[styles.calendarAction, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}
             >
               <FontAwesome name="calendar-o" size={14} color={palette.textMuted} />
-            </Pressable>
+            </AnimatedPressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.weekRow}>
             {weekView.map((day) => (
-              <Pressable
+              <AnimatedPressable
                 key={`${day.day}-${day.date}`}
                 onPress={() => setSelectedDayDetails(day.fullDate)}
                 style={[
@@ -457,7 +457,7 @@ export default function HomeScreen() {
                     <View style={[styles.activityDot, { backgroundColor: '#D6D3D1' }]} />
                   ) : null}
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             ))}
           </ScrollView>
         </View>
@@ -465,7 +465,7 @@ export default function HomeScreen() {
         {/* Stats Grid */}
         <View style={styles.statsRow}>
           {/* Weight Card */}
-          <Pressable
+          <AnimatedPressable
             onPress={() => router.push('/check-in')}
             style={[styles.statCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}
           >
@@ -495,7 +495,7 @@ export default function HomeScreen() {
                 <Text style={[styles.weightSinceText, { color: palette.textMuted }]}>Since last</Text>
               </View>
             ) : null}
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Up Next Card */}
           <View style={[styles.statCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
@@ -562,7 +562,7 @@ export default function HomeScreen() {
               </View>
             ) : (
               scheduledToday.map((item, index) => (
-                <Pressable
+                <AnimatedPressable
                   key={item.compound.id}
                   onPress={() =>
                     !item.isCompleted &&
@@ -634,7 +634,7 @@ export default function HomeScreen() {
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
                     </View>
                   ) : null}
-                </Pressable>
+                </AnimatedPressable>
               ))
             )}
           </View>
@@ -649,7 +649,7 @@ export default function HomeScreen() {
         onRequestClose={() => setSelectedDayDetails(null)}
       >
         <View style={styles.modalBackdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedDayDetails(null)} />
+          <AnimatedPressable style={StyleSheet.absoluteFill} onPress={() => setSelectedDayDetails(null)} />
           <View style={[styles.modalCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>
@@ -661,12 +661,12 @@ export default function HomeScreen() {
                     })
                   : 'Day Details'}
               </Text>
-              <Pressable
+              <AnimatedPressable
                 onPress={() => setSelectedDayDetails(null)}
                 style={[styles.modalCloseButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
               >
                 <FontAwesome name="close" size={14} color={palette.textMuted} />
-              </Pressable>
+              </AnimatedPressable>
             </View>
 
             <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
@@ -676,7 +676,7 @@ export default function HomeScreen() {
                   <Text style={[styles.emptyModalText, { color: palette.textMuted }]}>No scheduled protocols.</Text>
                 ) : (
                   selectedDayScheduled.map((compound) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={compound.id}
                       onPress={() => {
                         setSelectedDayDetails(null);
@@ -694,7 +694,7 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>
@@ -707,7 +707,7 @@ export default function HomeScreen() {
                   selectedDayLogs.map((log) => {
                     const compound = compounds.find((item) => item.id === log.compoundId);
                     return (
-                      <Pressable
+                      <AnimatedPressable
                         key={log.id}
                         onPress={() => {
                           setSelectedDayDetails(null);
@@ -731,7 +731,7 @@ export default function HomeScreen() {
                           </Text>
                         </View>
                         <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                      </Pressable>
+                      </AnimatedPressable>
                     );
                   })
                 )}
@@ -739,7 +739,7 @@ export default function HomeScreen() {
 
               <Text style={[styles.modalSectionLabel, { color: palette.textMuted, marginTop: 18 }]}>Check-In</Text>
               <View style={styles.modalListStack}>
-                <Pressable
+                <AnimatedPressable
                   onPress={() => {
                     if (!selectedDayDetails) return;
                     const date = toDateOnly(selectedDayDetails);
@@ -760,7 +760,7 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                   <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                </Pressable>
+                </AnimatedPressable>
               </View>
             </ScrollView>
           </View>
@@ -770,16 +770,16 @@ export default function HomeScreen() {
       {/* Search Modal */}
       <Modal transparent visible={searchOpen} animationType="fade" onRequestClose={() => setSearchOpen(false)}>
         <View style={styles.modalBackdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSearchOpen(false)} />
+          <AnimatedPressable style={StyleSheet.absoluteFill} onPress={() => setSearchOpen(false)} />
           <View style={[styles.modalCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>Search</Text>
-              <Pressable
+              <AnimatedPressable
                 onPress={() => setSearchOpen(false)}
                 style={[styles.modalCloseButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
               >
                 <FontAwesome name="close" size={14} color={palette.textMuted} />
-              </Pressable>
+              </AnimatedPressable>
             </View>
 
             <View style={[styles.searchInputWrap, { backgroundColor: isDark ? '#292524' : '#F5F5F4', borderColor: isDark ? '#292524' : '#E7E5E4' }]}>
@@ -802,7 +802,7 @@ export default function HomeScreen() {
                   <Text style={[styles.emptyModalText, { color: palette.textMuted }]}>No protocols found.</Text>
                 ) : (
                   filteredCompounds.map((compound) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={compound.id}
                       onPress={() => {
                         setSearchOpen(false);
@@ -818,7 +818,7 @@ export default function HomeScreen() {
                         <Text style={[styles.modalListSubtitle, { color: palette.textMuted }]}>Tap to log</Text>
                       </View>
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>
@@ -829,7 +829,7 @@ export default function HomeScreen() {
                   <Text style={[styles.emptyModalText, { color: palette.textMuted }]}>No logs found.</Text>
                 ) : (
                   filteredLogs.map(({ log, compound }) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={log.id}
                       onPress={() => {
                         setSearchOpen(false);
@@ -849,7 +849,7 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>
@@ -861,16 +861,16 @@ export default function HomeScreen() {
       {/* Inbox Modal */}
       <Modal transparent visible={inboxOpen} animationType="fade" onRequestClose={() => setInboxOpen(false)}>
         <View style={styles.modalBackdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setInboxOpen(false)} />
+          <AnimatedPressable style={StyleSheet.absoluteFill} onPress={() => setInboxOpen(false)} />
           <View style={[styles.modalCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>Upcoming</Text>
-              <Pressable
+              <AnimatedPressable
                 onPress={() => setInboxOpen(false)}
                 style={[styles.modalCloseButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}
               >
                 <FontAwesome name="close" size={14} color={palette.textMuted} />
-              </Pressable>
+              </AnimatedPressable>
             </View>
 
             <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
@@ -881,7 +881,7 @@ export default function HomeScreen() {
                   </View>
                 ) : (
                   upcoming.map((item, idx) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={`${item.compound.id}-${idx}`}
                       onPress={() => {
                         setInboxOpen(false);
@@ -906,7 +906,7 @@ export default function HomeScreen() {
                       ) : (
                         <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
                       )}
-                    </Pressable>
+                    </AnimatedPressable>
                   ))
                 )}
               </View>

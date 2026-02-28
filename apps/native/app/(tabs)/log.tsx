@@ -6,13 +6,14 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { AnimatedCard } from '@/components/motion/AnimatedCard';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import {
@@ -23,6 +24,7 @@ import {
   listCompounds,
   updateInjectionLog,
 } from '@/services/repository';
+import { haptics } from '@/services/haptics';
 import { UI_LAYOUT, getUiPalette } from '@/theme/ui';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import type { Compound, InjectionLog } from '@dosebase/shared';
@@ -145,12 +147,15 @@ function CompoundSelectScreen({
   return (
     <View style={[styles.selectScreen, { backgroundColor: palette.background }]}>
       <View style={styles.selectHeader}>
-        <Pressable
-          onPress={onClose}
+        <AnimatedPressable
+          onPress={() => {
+            haptics.selection();
+            onClose();
+          }}
           style={[styles.closeButton, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#F5F5F4' }]}
         >
           <FontAwesome name="times" size={18} color={palette.textMuted} />
-        </Pressable>
+        </AnimatedPressable>
       </View>
 
       <View style={styles.selectTitleWrap}>
@@ -166,24 +171,28 @@ function CompoundSelectScreen({
             <Text style={[styles.selectEmptyText, { color: palette.textMuted }]}>
               No protocols found.
             </Text>
-            <Pressable
+            <AnimatedPressable
               style={[styles.addFirstButton, { backgroundColor: '#1C1917' }]}
               onPress={() => {
+                haptics.selection();
                 onClose();
                 router.push('/compound-form');
               }}
             >
               <Text style={styles.addFirstButtonText}>Add Your First Protocol</Text>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         ) : (
           compounds.map((c) => {
             const solid = getCompoundSolidColor(c.color);
             const accent = getCompoundAccent(c.color);
             return (
-              <Pressable
+              <AnimatedPressable
                 key={c.id}
-                onPress={() => onSelect(c.id)}
+                onPress={() => {
+                  haptics.selection();
+                  onSelect(c.id);
+                }}
                 style={[
                   styles.selectCard,
                   {
@@ -215,7 +224,7 @@ function CompoundSelectScreen({
                 <View style={[styles.selectChevron, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}>
                   <FontAwesome name="chevron-right" size={12} color={palette.textMuted} />
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             );
           })
         )}
@@ -308,6 +317,7 @@ export default function LogScreen() {
 
   const handleSelectCompound = useCallback(
     async (id: string) => {
+      haptics.selection();
       setShowSelect(false);
       setSelectedCompoundId(id);
       setDose('');
@@ -350,6 +360,7 @@ export default function LogScreen() {
   const handleSubmit = useCallback(async () => {
     if (!selectedCompoundId) return;
     if (selectedCompound?.category !== 'microneedling' && !dose) {
+      haptics.error();
       Alert.alert('Missing dose', 'Please enter a dose amount.');
       return;
     }
@@ -373,8 +384,10 @@ export default function LogScreen() {
       } else {
         await insertInjectionLog(payload);
       }
+      haptics.success();
       router.replace('/(tabs)/log');
     } catch (err) {
+      haptics.error();
       Alert.alert('Error', err instanceof Error ? err.message : 'Failed to save entry');
     } finally {
       setSaving(false);
@@ -383,6 +396,7 @@ export default function LogScreen() {
 
   const handleDelete = useCallback(() => {
     if (!editLogId) return;
+    haptics.selection();
     Alert.alert(
       'Delete log entry',
       'This action cannot be undone. Are you sure you want to delete this log entry?',
@@ -392,11 +406,14 @@ export default function LogScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            haptics.destructive();
             setSaving(true);
             try {
               await deleteInjectionLog(editLogId);
+              haptics.success();
               router.replace('/(tabs)/log');
             } catch (err) {
+              haptics.error();
               Alert.alert('Error', err instanceof Error ? err.message : 'Failed to delete entry');
             } finally {
               setSaving(false);
@@ -460,17 +477,17 @@ export default function LogScreen() {
             </Text>
           </View>
           {isEdit && (
-            <Pressable
+            <AnimatedPressable
               onPress={handleDelete}
               style={[styles.deleteButton, { backgroundColor: isDark ? '#292524' : '#FEE2E2', borderColor: isDark ? '#3A3734' : '#FECACA' }]}
             >
               <FontAwesome name="trash-o" size={16} color="#EF4444" />
-            </Pressable>
+            </AnimatedPressable>
           )}
         </View>
 
         {compounds.length === 0 ? (
-          <View style={[styles.emptyCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
+          <AnimatedCard style={[styles.emptyCard, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
             <View style={[styles.emptyIcon, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}>
               <FontAwesome name="medkit" size={22} color={palette.textMuted} />
             </View>
@@ -478,17 +495,20 @@ export default function LogScreen() {
             <Text style={[styles.emptyBody, { color: palette.textMuted }]}>
               Add your first protocol before logging doses.
             </Text>
-            <Pressable
+            <AnimatedPressable
               style={[styles.goToProtocols, { backgroundColor: '#1C1917' }]}
-              onPress={() => router.push('/compound-form')}
+              onPress={() => {
+                haptics.selection();
+                router.push('/compound-form');
+              }}
             >
               <Text style={styles.goToProtocolsText}>Add Your First Protocol</Text>
-            </Pressable>
-          </View>
+            </AnimatedPressable>
+          </AnimatedCard>
         ) : (
           <>
             {/* Main card */}
-            <View
+            <AnimatedCard
               style={[
                 styles.mainCard,
                 { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' },
@@ -498,8 +518,12 @@ export default function LogScreen() {
               <View style={[styles.cardBlob, { backgroundColor: accentColor }]} />
 
               {/* Compound selector */}
-              <Pressable
-                onPress={() => !isEdit && setShowSelect(true)}
+              <AnimatedPressable
+                onPress={() => {
+                  if (isEdit) return;
+                  haptics.selection();
+                  setShowSelect(true);
+                }}
                 style={[
                   styles.compoundSelector,
                   { backgroundColor: isDark ? '#292524' : '#F8F8F8', borderColor: isDark ? '#3A3734' : '#E7E5E4' },
@@ -518,7 +542,7 @@ export default function LogScreen() {
                 {!isEdit && (
                   <FontAwesome name="chevron-down" size={12} color={palette.textMuted} />
                 )}
-              </Pressable>
+              </AnimatedPressable>
 
               {/* ── MICRONEEDLING: needle depth + glide serum ── */}
               {selectedCompound?.category === 'microneedling' ? (
@@ -527,15 +551,16 @@ export default function LogScreen() {
 
                   {/* Stepper */}
                   <View style={styles.stepperRow}>
-                    <Pressable
+                    <AnimatedPressable
                       style={[styles.stepperButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4', borderColor: isDark ? '#3A3734' : '#E7E5E4' }]}
                       onPress={() => {
+                        haptics.selection();
                         const next = roundToStep((parseFloat(needleDepth || '0') || 0) - 0.1, 0.1);
                         setNeedleDepth(String(clamp(next, 0, 3)));
                       }}
                     >
                       <FontAwesome name="minus" size={16} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                     <TextInput
                       style={[styles.doseInput, { color: palette.textPrimary }]}
                       value={needleDepth}
@@ -544,15 +569,16 @@ export default function LogScreen() {
                       placeholder="0.0"
                       placeholderTextColor={palette.textMuted}
                     />
-                    <Pressable
+                    <AnimatedPressable
                       style={[styles.stepperButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4', borderColor: isDark ? '#3A3734' : '#E7E5E4' }]}
                       onPress={() => {
+                        haptics.selection();
                         const next = roundToStep((parseFloat(needleDepth || '0') || 0) + 0.1, 0.1);
                         setNeedleDepth(String(clamp(next, 0, 3)));
                       }}
                     >
                       <FontAwesome name="plus" size={16} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   </View>
 
                   {/* Depth presets */}
@@ -560,9 +586,12 @@ export default function LogScreen() {
                     {[0.25, 0.5, 0.75, 1.0, 1.5, 2.0].map((v) => {
                       const selected = needleDepth === String(v);
                       return (
-                        <Pressable
+                        <AnimatedPressable
                           key={v}
-                          onPress={() => setNeedleDepth(String(v))}
+                          onPress={() => {
+                            haptics.selection();
+                            setNeedleDepth(String(v));
+                          }}
                           style={[
                             styles.presetChip,
                             selected
@@ -573,7 +602,7 @@ export default function LogScreen() {
                           <Text style={[styles.presetText, { color: selected ? '#FFFFFF' : palette.textSecondary }]}>
                             {v}mm
                           </Text>
-                        </Pressable>
+                        </AnimatedPressable>
                       );
                     })}
                   </View>
@@ -601,9 +630,12 @@ export default function LogScreen() {
                       {dosePresets.map((p) => {
                         const selected = dose === String(p);
                         return (
-                          <Pressable
+                          <AnimatedPressable
                             key={p}
-                            onPress={() => setDose(String(p))}
+                            onPress={() => {
+                              haptics.selection();
+                              setDose(String(p));
+                            }}
                             style={[
                               styles.presetChip,
                               selected
@@ -614,7 +646,7 @@ export default function LogScreen() {
                             <Text style={[styles.presetText, { color: selected ? '#FFFFFF' : palette.textSecondary }]}>
                               {p} {selectedCompound?.doseUnit}
                             </Text>
-                          </Pressable>
+                          </AnimatedPressable>
                         );
                       })}
                     </View>
@@ -622,15 +654,16 @@ export default function LogScreen() {
 
                   {/* Stepper */}
                   <View style={styles.stepperRow}>
-                    <Pressable
+                    <AnimatedPressable
                       style={[styles.stepperButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4', borderColor: isDark ? '#3A3734' : '#E7E5E4' }]}
                       onPress={() => {
+                        haptics.selection();
                         const next = (parseFloat(dose || '0') || 0) - doseStep;
                         setDose(String(Math.max(0, roundToStep(next, doseStep))));
                       }}
                     >
                       <FontAwesome name="minus" size={16} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                     <TextInput
                       style={[styles.doseInput, { color: palette.textPrimary }]}
                       value={dose}
@@ -639,15 +672,16 @@ export default function LogScreen() {
                       placeholder="0"
                       placeholderTextColor={palette.textMuted}
                     />
-                    <Pressable
+                    <AnimatedPressable
                       style={[styles.stepperButton, { backgroundColor: isDark ? '#292524' : '#F5F5F4', borderColor: isDark ? '#3A3734' : '#E7E5E4' }]}
                       onPress={() => {
+                        haptics.selection();
                         const next = (parseFloat(dose || '0') || 0) + doseStep;
                         setDose(String(roundToStep(next, doseStep)));
                       }}
                     >
                       <FontAwesome name="plus" size={16} color={palette.textMuted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   </View>
                   <Text style={[styles.doseUnitLabel, { color: palette.textMuted }]}>
                     {selectedCompound?.doseUnit}
@@ -660,8 +694,9 @@ export default function LogScreen() {
                 <View style={[styles.metaIconBadge, { backgroundColor: palette.card }]}>
                   <FontAwesome name="calendar-o" size={12} color={palette.textMuted} />
                 </View>
-                <Pressable
+                <AnimatedPressable
                   onPress={() => {
+                    haptics.selection();
                     // On iOS, show an Alert with date options
                     const now = new Date();
                     const options = [
@@ -687,7 +722,7 @@ export default function LogScreen() {
                     {formatDateTime(timestamp)}
                   </Text>
                   <Text style={[styles.metaHint, { color: palette.textMuted }]}>Tap to change</Text>
-                </Pressable>
+                </AnimatedPressable>
               </View>
 
               {/* Treatment site (read-only from protocol) */}
@@ -711,8 +746,11 @@ export default function LogScreen() {
               )}
 
               {/* Submit */}
-              <Pressable
-                onPress={() => void handleSubmit()}
+                <AnimatedPressable
+                onPress={() => {
+                  haptics.selection();
+                  void handleSubmit();
+                }}
                 disabled={busy}
                 style={[
                   styles.submitButton,
@@ -733,8 +771,8 @@ export default function LogScreen() {
                 <Text style={styles.submitButtonText}>
                   {busy ? 'Saving…' : isEdit ? 'Update Entry' : 'Save Entry'}
                 </Text>
-              </Pressable>
-            </View>
+              </AnimatedPressable>
+            </AnimatedCard>
 
             {/* Recent Logs */}
             <RecentLogs compounds={compounds} isDark={isDark} palette={palette} />
@@ -781,14 +819,15 @@ function RecentLogs({
           const logAccent = getCompoundAccent(compound?.color);
           const logSolid = getCompoundSolidColor(compound?.color);
           return (
-            <Pressable
+            <AnimatedPressable
               key={log.id}
-              onPress={() =>
+              onPress={() => {
+                haptics.selection();
                 router.push({
                   pathname: '/(tabs)/log',
                   params: { logId: log.id, compoundId: log.compoundId },
-                })
-              }
+                });
+              }}
               style={[
                 styles.recentCard,
                 { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' },
@@ -810,7 +849,7 @@ function RecentLogs({
                 </Text>
               </View>
               <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
-            </Pressable>
+            </AnimatedPressable>
           );
         })}
       </View>

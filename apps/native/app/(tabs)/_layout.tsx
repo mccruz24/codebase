@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Redirect, Tabs } from 'expo-router';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useReduceMotion } from '@/hooks/useReduceMotion';
+import { getSpringConfig } from '@/lib/motion';
+import { MOTION } from '@/theme/motion';
 import { getUiPalette } from '@/theme/ui';
 
 const REQUIRED_DISCLAIMER_VERSION = 1;
@@ -14,8 +19,25 @@ function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
   size?: number;
+  focused?: boolean;
 }) {
-  return <FontAwesome style={styles.tabIcon} {...props} size={props.size ?? 24} />;
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(props.focused ? MOTION.scale.selectedBump : 1);
+
+  useEffect(() => {
+    const nextScale = props.focused ? MOTION.scale.selectedBump : 1;
+    scale.value = withSpring(nextScale, getSpringConfig('smooth', reduceMotion));
+  }, [props.focused, reduceMotion, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <FontAwesome style={styles.tabIcon} {...props} size={props.size ?? 24} />
+    </Animated.View>
+  );
 }
 
 export default function TabLayout() {
@@ -36,9 +58,9 @@ export default function TabLayout() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  // Active: stone-900 (light) / white (dark); Inactive: stone-300 (light) / stone-600 (dark)
   const activeColor = isDark ? '#FAFAF9' : '#1C1917';
   const inactiveColor = isDark ? '#57534E' : '#D6D3D1';
+
   return (
     <Tabs
       screenOptions={{
@@ -70,18 +92,14 @@ export default function TabLayout() {
             : {}),
         },
         tabBarItemStyle: { flex: 1, marginHorizontal: 0, borderRadius: 16 },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome
-              name="home"
-              size={24}
-              color={color}
-              style={styles.tabIcon}
-            />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="home" size={24} color={color} focused={focused} />
           ),
         }}
       />
@@ -89,13 +107,8 @@ export default function TabLayout() {
         name="protocols"
         options={{
           title: 'Protocols',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome
-              name="list-ul"
-              size={22}
-              color={color}
-              style={styles.tabIcon}
-            />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="list-ul" size={22} color={color} focused={focused} />
           ),
         }}
       />
@@ -104,20 +117,20 @@ export default function TabLayout() {
         options={{
           title: 'Log',
           tabBarButton: ({ onPress, accessibilityLabel, accessibilityState, testID }) => (
-            <Pressable
+            <AnimatedPressable
               onPress={onPress}
               accessibilityLabel={accessibilityLabel}
               accessibilityRole="button"
               accessibilityState={accessibilityState}
               testID={testID}
-              style={styles.fabSlot}
+              pressedScale={0.94}
+              containerStyle={styles.fabSlot}
+              style={styles.fabButtonWrap}
             >
               <View
                 style={[
                   styles.fabButton,
-                  {
-                    backgroundColor: isDark ? '#FAFAF9' : '#1C1917',
-                  },
+                  { backgroundColor: isDark ? '#FAFAF9' : '#1C1917' },
                 ]}
               >
                 <FontAwesome
@@ -126,7 +139,7 @@ export default function TabLayout() {
                   color={isDark ? '#1C1917' : '#FFFFFF'}
                 />
               </View>
-            </Pressable>
+            </AnimatedPressable>
           ),
         }}
       />
@@ -134,13 +147,8 @@ export default function TabLayout() {
         name="trends"
         options={{
           title: 'Trends',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome
-              name="heartbeat"
-              size={22}
-              color={color}
-              style={styles.tabIcon}
-            />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="heartbeat" size={22} color={color} focused={focused} />
           ),
         }}
       />
@@ -148,13 +156,8 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome
-              name="cog"
-              size={22}
-              color={color}
-              style={styles.tabIcon}
-            />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name="cog" size={22} color={color} focused={focused} />
           ),
         }}
       />
@@ -171,10 +174,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
+  fabButtonWrap: {
+    marginTop: -16,
+  },
   fabButton: {
     width: 48,
     height: 48,
-    marginTop: -16,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -188,3 +193,4 @@ const styles = StyleSheet.create({
       : {}),
   },
 });
+

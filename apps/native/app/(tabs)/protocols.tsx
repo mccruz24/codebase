@@ -5,13 +5,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { Screen } from '@/components/Screen';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { useColorScheme } from '@/components/useColorScheme';
 import { listCompounds, listInjectionLogs } from '@/services/repository';
 import { UI_LAYOUT, getUiPalette } from '@/theme/ui';
@@ -164,7 +164,7 @@ export default function ProtocolsScreen() {
             <Text style={[styles.subtitle, { color: palette.textMuted }]}>Manage your stack</Text>
           </View>
           {viewMode === 'protocols' ? (
-            <Pressable
+            <AnimatedPressable
               style={[styles.addButton, Platform.OS === 'ios' && {
                 shadowColor: '#1C1917',
                 shadowOffset: { width: 0, height: 8 },
@@ -174,13 +174,13 @@ export default function ProtocolsScreen() {
               onPress={() => router.push('/compound-form')}
             >
               <FontAwesome name="plus" size={17} color={isDark ? '#0C0A09' : '#FFFFFF'} />
-            </Pressable>
+            </AnimatedPressable>
           ) : null}
         </View>
 
         {/* View Toggle */}
         <View style={[styles.segmentWrap, { backgroundColor: palette.card, borderColor: isDark ? '#292524' : '#FAFAF9' }]}>
-          <Pressable
+          <AnimatedPressable
             onPress={() => setViewMode('protocols')}
             style={[
               styles.segmentButton,
@@ -195,8 +195,8 @@ export default function ProtocolsScreen() {
             <Text style={[styles.segmentText, { color: viewMode === 'protocols' ? '#FFFFFF' : palette.textMuted }]}>
               Protocols
             </Text>
-          </Pressable>
-          <Pressable
+          </AnimatedPressable>
+          <AnimatedPressable
             onPress={() => setViewMode('history')}
             style={[styles.segmentButton, viewMode === 'history' ? styles.segmentButtonActive : null]}
           >
@@ -208,7 +208,7 @@ export default function ProtocolsScreen() {
             <Text style={[styles.segmentText, { color: viewMode === 'history' ? '#FFFFFF' : palette.textMuted }]}>
               Log History
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         {viewMode === 'protocols' ? (
@@ -243,7 +243,7 @@ export default function ProtocolsScreen() {
                   </View>
                   <View style={styles.cardsStack}>
                     {compoundsInCategory.map((compound) => (
-                      <Pressable
+                      <AnimatedPressable
                         key={compound.id}
                         onPress={() => router.push({ pathname: '/edit-protocol', params: { id: compound.id } })}
                         style={[styles.protocolCard, {
@@ -277,7 +277,7 @@ export default function ProtocolsScreen() {
                         <View style={[styles.chevronWrap, { backgroundColor: isDark ? '#292524' : '#F5F5F4' }]}>
                           <FontAwesome name="chevron-right" size={11} color={palette.textMuted} />
                         </View>
-                      </Pressable>
+                      </AnimatedPressable>
                     ))}
                   </View>
                 </View>
@@ -294,7 +294,7 @@ export default function ProtocolsScreen() {
                 </View>
                 <View style={styles.cardsStack}>
                   {archivedCompounds.map((compound) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={compound.id}
                       onPress={() => router.push({ pathname: '/edit-protocol', params: { id: compound.id } })}
                       style={[styles.protocolCard, {
@@ -318,7 +318,7 @@ export default function ProtocolsScreen() {
                           </View>
                         </View>
                       </View>
-                    </Pressable>
+                    </AnimatedPressable>
                   ))}
                 </View>
               </View>
@@ -349,7 +349,7 @@ export default function ProtocolsScreen() {
                     {dateLogs.map((log) => {
                       const compound = compoundById.get(log.compoundId);
                       return (
-                        <Pressable
+                        <AnimatedPressable
                           key={log.id}
                           onPress={() => router.push({ pathname: '/(tabs)/log', params: { logId: log.id } })}
                           style={[styles.logCard, {
@@ -380,7 +380,7 @@ export default function ProtocolsScreen() {
                               {formatTime(log.timestamp)}
                             </Text>
                           </View>
-                        </Pressable>
+                        </AnimatedPressable>
                       );
                     })}
                   </View>

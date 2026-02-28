@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import {
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,9 +11,13 @@ import {
   View,
 } from 'react-native';
 import { toDateOnly, type Compound } from '@dosebase/shared';
+import { AnimatedCard } from '@/components/motion/AnimatedCard';
+import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
+import { AnimatedSegmented } from '@/components/motion/AnimatedSegmented';
 import { Screen } from '@/components/Screen';
 import { useColorScheme } from '@/components/useColorScheme';
 import { deleteCompoundById, getCompoundById, upsertCompound } from '@/services/repository';
+import { haptics } from '@/services/haptics';
 import { getUiPalette } from '@/theme/ui';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 
@@ -236,6 +239,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
   const textMuted = palette.textMuted;
 
   const onCategoryChange = (nextCategory: CompoundCategory) => {
+    haptics.selection();
     const meta = CATEGORY_META[nextCategory];
     const intervalFromMeta = fromStoredIntervalDays(meta.intervalDays);
     setForm((prev) => ({
@@ -253,6 +257,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
   };
 
   const toggleDay = (day: string) => {
+    haptics.selection();
     setForm((prev) => {
       const exists = prev.frequencySpecificDays.includes(day);
       return {
@@ -268,25 +273,30 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
     const normalizedName =
       form.category === 'microneedling' ? form.name.trim() || 'Microneedling' : form.name.trim();
     if (!normalizedName) {
+      haptics.error();
       Alert.alert('Missing name', 'Please provide a protocol name.');
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(form.startDate)) {
+      haptics.error();
       Alert.alert('Invalid date', 'Start date must be in YYYY-MM-DD format.');
       return;
     }
     if (form.frequencyType === 'interval') {
       const intervalValue = Number(form.frequencyDays);
       if (!Number.isFinite(intervalValue) || intervalValue < 1) {
+        haptics.error();
         Alert.alert('Invalid frequency', 'Interval must be at least 1.');
         return;
       }
     }
     if (form.frequencyType === 'specific_days' && form.frequencySpecificDays.length === 0) {
+      haptics.error();
       Alert.alert('Select weekdays', 'Pick at least one weekday for this protocol.');
       return;
     }
 
+    haptics.selection();
     setSaving(true);
     try {
       const payload: Partial<Compound> & { name: string } = {
@@ -314,9 +324,11 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
         dilutionAmount: asNumber(form.dilutionAmount),
       };
       await upsertCompound(payload);
+      haptics.success();
       if (router.canGoBack()) router.back();
       else router.replace('/(tabs)/protocols');
     } catch (err) {
+      haptics.error();
       Alert.alert('Save failed', err instanceof Error ? err.message : 'Could not save protocol.');
     } finally {
       setSaving(false);
@@ -325,18 +337,22 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
 
   const onDelete = () => {
     if (!isEdit || !editId || deleting) return;
+    haptics.selection();
     Alert.alert('Delete protocol?', 'This will permanently remove this protocol.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          haptics.destructive();
           try {
             setDeleting(true);
             await deleteCompoundById(editId);
+            haptics.success();
             if (router.canGoBack()) router.back();
             else router.replace('/(tabs)/protocols');
           } catch (err) {
+            haptics.error();
             Alert.alert('Delete failed', err instanceof Error ? err.message : 'Could not delete protocol.');
           } finally {
             setDeleting(false);
@@ -374,12 +390,12 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
 
         {/* ── HEADER ── */}
         <View style={styles.headerRow}>
-          <Pressable
-            onPress={() =>
-              router.canGoBack()
-                ? router.back()
-                : router.replace('/(tabs)/protocols')
-            }
+          <AnimatedPressable
+            onPress={() => {
+              haptics.selection();
+              if (router.canGoBack()) router.back();
+              else router.replace('/(tabs)/protocols');
+            }}
             style={[
               styles.backBtn,
               { backgroundColor: cardBg, borderColor: cardBorder },
@@ -389,7 +405,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
             ]}
           >
             <FontAwesome name="chevron-left" size={14} color={textPrimary} />
-          </Pressable>
+          </AnimatedPressable>
           <Text style={[styles.headerTitle, { color: textPrimary }]}>
             {isEdit ? 'Edit Protocol' : 'Add Protocol'}
           </Text>
@@ -402,7 +418,8 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
 
         {/* ── CATEGORY / IDENTITY HEADER ── */}
         {isEdit ? (
-          <View
+          <AnimatedCard
+            delay={40}
             style={[
               styles.lockedIdentityCard,
               { backgroundColor: cardBg, borderColor: cardBorder },
@@ -440,9 +457,10 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
             <Text style={[styles.fieldHint, { color: textMuted }]}>
               Name and category are locked after creation.
             </Text>
-          </View>
+          </AnimatedCard>
         ) : (
-          <View
+          <AnimatedCard
+            delay={40}
             style={[
               styles.categoryCard,
               { backgroundColor: cardBg, borderColor: cardBorder },
@@ -454,7 +472,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
             {(Object.keys(CATEGORY_META) as CompoundCategory[]).map((cat) => {
               const active = form.category === cat;
               return (
-                <Pressable
+                <AnimatedPressable
                   key={cat}
                   onPress={() => onCategoryChange(cat)}
                   disabled={isCategoryLocked}
@@ -479,14 +497,15 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                   <Text style={[styles.categoryBtnText, { color: active ? '#FFFFFF' : textMuted }]}>
                     {CATEGORY_META[cat].label}
                   </Text>
-                </Pressable>
+                </AnimatedPressable>
               );
             })}
-          </View>
+          </AnimatedCard>
         )}
 
         {/* ── IDENTITY SECTION ── */}
-        <View
+        <AnimatedCard
+          delay={70}
           style={[
             styles.sectionCard,
             { backgroundColor: cardBg, borderColor: cardBorder },
@@ -503,9 +522,12 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                 {BOOSTER_TYPES.map((type) => {
                   const active = (form.subCategory || BOOSTER_TYPES[0]) === type;
                   return (
-                    <Pressable
+                    <AnimatedPressable
                       key={type}
-                      onPress={() => setForm((prev) => ({ ...prev, subCategory: type }))}
+                      onPress={() => {
+                        haptics.selection();
+                        setForm((prev) => ({ ...prev, subCategory: type }));
+                      }}
                       disabled={isEdit}
                       style={[
                         styles.boosterTypeChip,
@@ -523,7 +545,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                       >
                         {type}
                       </Text>
-                    </Pressable>
+                    </AnimatedPressable>
                   );
                 })}
               </View>
@@ -574,16 +596,17 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
               {showNameSuggestions && nameSuggestions.length > 0 ? (
                 <View style={[styles.suggestionsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                   {nameSuggestions.map((suggestion) => (
-                    <Pressable
+                    <AnimatedPressable
                       key={suggestion}
                       onPress={() => {
+                        haptics.selection();
                         setForm((prev) => ({ ...prev, name: suggestion }));
                         setShowNameSuggestions(false);
                       }}
                       style={styles.suggestionItem}
                     >
                       <Text style={[styles.suggestionText, { color: textPrimary }]}>{suggestion}</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                   ))}
                 </View>
               ) : null}
@@ -616,10 +639,11 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
               </View>
             </View>
           ) : null}
-        </View>
+        </AnimatedCard>
 
         {/* ── SCHEDULE SECTION ── */}
-        <View
+        <AnimatedCard
+          delay={100}
           style={[
             styles.sectionCard,
             { backgroundColor: cardBg, borderColor: cardBorder },
@@ -645,52 +669,21 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
           {/* Frequency Toggle */}
           <View style={styles.fieldGroup}>
             <Text style={[styles.fieldLabel, { color: textMuted }]}>Frequency</Text>
-            <View style={[styles.freqToggle, { backgroundColor: fieldBg }]}>
-              <Pressable
-                onPress={() => setForm((prev) => ({ ...prev, frequencyType: 'specific_days' }))}
-                style={[
-                  styles.freqBtn,
-                  form.frequencyType === 'specific_days'
-                    ? [styles.freqBtnActive, { backgroundColor: isDark ? '#FAFAF9' : '#1C1917' }]
-                    : null,
-                ]}
-                >
-                  <Text
-                    style={[
-                      styles.freqBtnText,
-                    {
-                      color: form.frequencyType === 'specific_days'
-                        ? (isDark ? '#1C1917' : '#FFFFFF')
-                        : textMuted,
-                    },
-                  ]}
-                >
-                  Day of Week
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setForm((prev) => ({ ...prev, frequencyType: 'interval' }))}
-                style={[
-                  styles.freqBtn,
-                  form.frequencyType === 'interval'
-                    ? [styles.freqBtnActive, { backgroundColor: isDark ? '#FAFAF9' : '#1C1917' }]
-                    : null,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.freqBtnText,
-                    {
-                      color: form.frequencyType === 'interval'
-                        ? (isDark ? '#1C1917' : '#FFFFFF')
-                        : textMuted,
-                    },
-                  ]}
-                >
-                  Interval
-                </Text>
-              </Pressable>
-            </View>
+            <AnimatedSegmented
+              options={[
+                { key: 'specific_days', label: 'Day of Week' },
+                { key: 'interval', label: 'Interval' },
+              ]}
+              value={form.frequencyType}
+              onChange={(value) => {
+                haptics.selection();
+                setForm((prev) => ({ ...prev, frequencyType: value as FrequencyType }));
+              }}
+              backgroundColor={fieldBg}
+              activeBackgroundColor={isDark ? '#FAFAF9' : '#1C1917'}
+              activeTextColor={isDark ? '#1C1917' : '#FFFFFF'}
+              textColor={textMuted}
+            />
           </View>
 
           {/* Weekdays or Interval input */}
@@ -699,7 +692,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
               {WEEKDAYS.map((day) => {
                 const active = form.frequencySpecificDays.includes(day);
                 return (
-                  <Pressable
+                  <AnimatedPressable
                     key={day}
                     onPress={() => toggleDay(day)}
                     style={[
@@ -731,7 +724,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                     >
                       {day}
                     </Text>
-                  </Pressable>
+                  </AnimatedPressable>
                 );
               })}
             </View>
@@ -751,9 +744,12 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                   {(['day', 'week', 'month'] as const).map((unit) => {
                     const active = form.intervalUnit === unit;
                     return (
-                      <Pressable
+                      <AnimatedPressable
                         key={unit}
-                        onPress={() => setForm((prev) => ({ ...prev, intervalUnit: unit }))}
+                        onPress={() => {
+                          haptics.selection();
+                          setForm((prev) => ({ ...prev, intervalUnit: unit }));
+                        }}
                         style={[
                           styles.intervalUnitBtn,
                           active
@@ -773,17 +769,18 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                         >
                           {unit === 'day' ? 'Day' : unit === 'week' ? 'Week' : 'Month'}
                         </Text>
-                      </Pressable>
+                      </AnimatedPressable>
                     );
                   })}
                 </View>
               </View>
             </View>
           )}
-        </View>
+        </AnimatedCard>
 
         {/* ── COLOR LABEL SECTION ── */}
-        <View
+        <AnimatedCard
+          delay={130}
           style={[
             styles.sectionCard,
             { backgroundColor: cardBg, borderColor: cardBorder },
@@ -794,9 +791,12 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
             {COLOR_OPTIONS.map((opt) => {
               const active = form.color === opt.value;
               return (
-                <Pressable
+                <AnimatedPressable
                   key={opt.value}
-                  onPress={() => setForm((prev) => ({ ...prev, color: opt.value }))}
+                  onPress={() => {
+                    haptics.selection();
+                    setForm((prev) => ({ ...prev, color: opt.value }));
+                  }}
                   style={[
                     styles.colorSwatch,
                     { backgroundColor: opt.hex },
@@ -806,15 +806,16 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                   {active ? (
                     <FontAwesome name="check" size={14} color="#FFFFFF" />
                   ) : null}
-                </Pressable>
+                </AnimatedPressable>
               );
             })}
           </ScrollView>
-        </View>
+        </AnimatedCard>
 
         {/* ── RECONSTITUTION CALCULATOR (peptide only) ── */}
         {showReconstitution ? (
-          <View
+          <AnimatedCard
+            delay={160}
             style={[
               styles.reconCard,
               { borderColor: isDark ? 'rgba(68,64,60,0.5)' : 'rgba(214,211,208,0.5)', backgroundColor: isDark ? 'rgba(28,25,23,0.5)' : 'rgba(245,245,244,0.5)' },
@@ -876,7 +877,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
                 </Text>
                 </View>
               ) : null}
-            </View>
+            </AnimatedCard>
           ) : null}
 
           {isEdit ? (
@@ -902,7 +903,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
           ) : null}
 
         {/* ── SAVE BUTTON ── */}
-        <Pressable
+        <AnimatedPressable
           onPress={onSave}
           disabled={saving || loading}
           style={[
@@ -927,11 +928,11 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
           <Text style={[styles.saveBtnText, { color: isDark ? '#1C1917' : '#FFFFFF' }]}>
             {saving ? 'Saving…' : isEdit ? 'Save Protocol' : 'Add Protocol'}
           </Text>
-        </Pressable>
+        </AnimatedPressable>
 
         {/* ── DELETE BUTTON (edit only) ── */}
         {isEdit ? (
-          <Pressable
+          <AnimatedPressable
             onPress={onDelete}
             disabled={deleting || saving}
             style={[styles.deleteBtn, (deleting || saving) && styles.disabled]}
@@ -940,7 +941,7 @@ export default function ProtocolFormScreen({ mode }: ProtocolFormScreenProps) {
             <Text style={styles.deleteBtnText}>
               {deleting ? 'Deleting…' : 'Delete Protocol'}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         ) : null}
 
         <View style={{ height: 24 }} />

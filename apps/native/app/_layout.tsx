@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import 'react-native-url-polyfill/auto';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -64,12 +65,35 @@ function RootLayoutNavInner() {
   const colorScheme = useColorScheme();
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="compound-form" options={{ headerShown: false }} />
-        <Stack.Screen name="edit-protocol" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="compound-form"
+          options={{
+            presentation: Platform.OS === 'ios' ? 'modal' : 'card',
+            animation: Platform.OS === 'ios' ? 'slide_from_bottom' : 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="edit-protocol"
+          options={{
+            presentation: Platform.OS === 'ios' ? 'modal' : 'card',
+            animation: Platform.OS === 'ios' ? 'slide_from_bottom' : 'slide_from_right',
+          }}
+        />
         <Stack.Screen name="calendar" options={{ headerShown: false }} />
-        <Stack.Screen name="check-in" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="check-in"
+          options={{
+            presentation: Platform.OS === 'ios' ? 'modal' : 'card',
+            animation: Platform.OS === 'ios' ? 'slide_from_bottom' : 'slide_from_right',
+          }}
+        />
         <Stack.Screen name="faq" options={{ headerShown: false }} />
         <Stack.Screen name="terms" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
